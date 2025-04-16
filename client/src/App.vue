@@ -161,7 +161,7 @@ export default {
 }
 
 h1 {
-  margin-bottom: 20px;
+  margin-bottom: 200px;
   color: #333;
 }
 
