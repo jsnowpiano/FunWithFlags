@@ -226,7 +226,7 @@ const server = app.listen(3000, () => {
 
 const wss = new WebSocket.Server({ server });
 
-const broadcastToRoom = (roomCode, message) => {
+const sendToRoom = (roomCode, message) => {
     const room = rooms[roomCode];
     if (room) {
         room.clients.forEach(client => {
@@ -258,7 +258,7 @@ const sendRandomFlag = (roomCode) => {
         };
 
         room.answeredPlayers = [];
-        broadcastToRoom(roomCode, { type: 'newFlag', flag: room.currentFlag });
+        sendToRoom(roomCode, { type: 'newFlag', flag: room.currentFlag });
     } else {
         console.error(`Room with code ${roomCode} does not exist.`);
     }
@@ -287,7 +287,7 @@ wss.on('connection', (ws) => {
 
                 ws.send(JSON.stringify({ type: 'roomCreated', roomCode }));
             
-                broadcastToRoom(roomCode, { type: 'playersUpdate', players: rooms[roomCode].clients.map(c => ({ nickname: c.nickname, score: c.score })) });
+                sendToRoom(roomCode, { type: 'playersUpdate', players: rooms[roomCode].clients.map(c => ({ nickname: c.nickname, score: c.score })) });
             } else if (data.type === 'joinRoom') {
                 const room = rooms[data.roomCode];
                 if (room) {
@@ -295,15 +295,15 @@ wss.on('connection', (ws) => {
                     currentRoom = data.roomCode;
                     userId = data.nickname;
                     ws.send(JSON.stringify({ type: 'roomJoined', roomCode: data.roomCode }));
-                    broadcastToRoom(data.roomCode, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
+                    sendToRoom(data.roomCode, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
                 } else {
-                    ws.send(JSON.stringify({ type: 'error', message: 'Room not found' }));
+                    ws.send(JSON.stringify({ type: 'error', message: 'room not found' }));
                 }
             } else if (data.type === 'startGame') {
                 const room = rooms[currentRoom];
                 if (room && room.creator === userId) {
                     room.gameStarted = true;
-                    broadcastToRoom(currentRoom, { type: 'gameStarted' });
+                    sendToRoom(currentRoom, { type: 'gameStarted' });
                     sendRandomFlag(currentRoom); 
                 } else {
                     ws.send(JSON.stringify({ type: 'error', message: 'Only the room creator can start the game' }));
@@ -323,11 +323,11 @@ wss.on('connection', (ws) => {
                             }
                         }
             
-                        broadcastToRoom(currentRoom, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
+                        sendToRoom(currentRoom, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
             
                         if (player.score >= 1000) {
                             console.log(`${player.nickname} has won the game with ${player.score} points.`);
-                            broadcastToRoom(currentRoom, { type: 'gameWon', winner: player.nickname });
+                            sendToRoom(currentRoom, { type: 'gameWon', winner: player.nickname });
                             return;
                         }
             
@@ -342,12 +342,12 @@ wss.on('connection', (ws) => {
                     room.clients.forEach(client => {
                         client.score = 0;
                     });
-                    broadcastToRoom(currentRoom, { type: 'gameReset', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
+                    sendToRoom(currentRoom, { type: 'gameReset', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
                     sendRandomFlag(currentRoom); 
                 }
             }
         } catch (error) {
-            console.error('Error processing message:', error);
+            console.error('Error:', error);
         }
     });
 
@@ -359,7 +359,7 @@ wss.on('connection', (ws) => {
                 if (room.clients.length === 0) {
                     delete rooms[currentRoom];
                 } else {
-                    broadcastToRoom(currentRoom, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
+                    sendToRoom(currentRoom, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
                 }
             }
         }

@@ -113,7 +113,7 @@ export default {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({ type: 'createRoom', nickname: this.nickname }));
       } else {
-        console.error('WebSocket is not connected.');
+        console.error('Error: WebSocket is not connected.');
       }
     },
     joinRoom() {
@@ -156,10 +156,10 @@ export default {
 #app {
   font-family: Arial, sans-serif;
   margin: 0;
-  padding: 20px 0; /* Add padding to the top and bottom */
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Keep content horizontally centered */
+  align-items: center;
   min-height: 100vh;
   background-color: #f4f4f4;
 }
