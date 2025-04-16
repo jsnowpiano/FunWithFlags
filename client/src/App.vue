@@ -1,6 +1,8 @@
 <template>
   <div id="app">
     <h1>Fun With Flags</h1>
+    <img v-if="!roomCode && !gameStarted" src="./assets/sheldon.png" alt="Sheldon" class="sheldon" />
+    
 
     <div v-if="!roomCode && !gameStarted" class="room-form">
       <div>
@@ -148,6 +150,10 @@ export default {
 </script>
 
 <style>
+.sheldon {
+  width: 200px;
+  margin-bottom: 100px;
+}
 #app {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -161,7 +167,7 @@ export default {
 }
 
 h1 {
-  margin-bottom: 200px;
+  margin-bottom: 30px;
   color: #333;
 }
 
@@ -302,6 +308,9 @@ h1 {
 
   .flag-container {
     width: 100%; 
+  }
+  .sheldon {
+    display: none;
   }
 }
 </style>
