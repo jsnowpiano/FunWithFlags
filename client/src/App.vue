@@ -2,7 +2,6 @@
   <div id="app">
     <h1>Fun With Flags</h1>
 
-    <!-- Room creation/joining -->
     <div v-if="!roomCode && !gameStarted" class="room-form">
       <div>
         <button @click="createRoom" class="room-button">Create Room</button>
@@ -13,29 +12,25 @@
       </div>
     </div>
 
-    <!-- Waiting for game to start -->
     <div v-else-if="!gameStarted && !winner" class="waiting-room">
       <h2>Room Code: {{ roomCode }}</h2>
       <p>Players:</p>
       <ul>
-        <li v-for="player in players" :key="player.username">{{ player.username }}: {{ player.score }}</li>
+        <li v-for="player in players" :key="player.nickname">{{ player.nickname }}: {{ player.score }}</li>
       </ul>
       <button v-if="isCreator" @click="startGame" class="start-button">Start Game</button>
       <p v-else>Waiting for the room creator to start the game...</p>
     </div>
-
-    <!-- Win screen -->
     <div v-else-if="winner" class="win-screen">
       <h2>{{ winner }} has won the game!</h2>
       <button v-if="isCreator" @click="resetGame" class="reset-button">Continue</button>
     </div>
 
-    <!-- Game content -->
     <div v-else class="game-container">
   <div class="players-list">
     <h3>Players</h3>
     <ul>
-      <li v-for="player in players" :key="player.username">{{ player.username }}: {{ player.score }}</li>
+      <li v-for="player in players" :key="player.nickname">{{ player.nickname }}: {{ player.score }}</li>
     </ul>
   </div>
   <div class="flag-container" v-if="currentFlag">
@@ -66,7 +61,7 @@ export default {
   data() {
     return {
       ws: null,
-      username: null,
+      nickname: null,
       roomCode: null,
       tempRoomCode: '',
       players: [],
@@ -75,8 +70,8 @@ export default {
       currentFlag: null,
       feedback: '',
       answered: false,
-      winner: null // Track the winner
-    };
+      winner: null
+        };
   },
   methods: {
     setupWebSocket() {
@@ -98,32 +93,32 @@ export default {
           this.feedback = '';
           this.answered = false;
         } else if (data.type === 'gameWon') {
-          this.winner = data.winner; // Set the winner
-          this.gameStarted = false; // Stop the game
+          this.winner = data.winner;
+          this.gameStarted = false;
         } else if (data.type === 'gameReset') {
-          this.players = data.players; // Reset player scores
-          this.winner = null; // Clear the winner
-          this.gameStarted = true; // Restart the game
+          this.players = data.players;
+          this.winner = null;
+          this.gameStarted = true;
         } else if (data.type === 'error') {
           alert(data.message);
         }
       };
     },
     createRoom() {
-      if (!this.username) {
-        this.username = prompt('Enter your username:');
-      }
+      if (!this.nickname) {
+        this.nickname = prompt('Enter your nick name:');
+      } 
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: 'createRoom', username: this.username }));
+        this.ws.send(JSON.stringify({ type: 'createRoom', nickname: this.nickname }));
       } else {
         console.error('WebSocket is not connected.');
       }
     },
     joinRoom() {
-      if (!this.username) {
-        this.username = prompt('Enter your username:');
+      if (!this.nickname) {
+        this.nickname = prompt('Enter your nickname:');
       }
-      this.ws.send(JSON.stringify({ type: 'joinRoom', roomCode: this.tempRoomCode, username: this.username }));
+      this.ws.send(JSON.stringify({ type: 'joinRoom', roomCode: this.tempRoomCode, nickname: this.nickname }));
     },
     startGame() {
       this.ws.send(JSON.stringify({ type: 'startGame' }));
@@ -153,7 +148,6 @@ export default {
 </script>
 
 <style>
-/* General layout */
 #app {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -171,7 +165,6 @@ h1 {
   color: #333;
 }
 
-/* Room creation/joining */
 .room-form {
   text-align: center;
   margin-top: 50px;
@@ -191,13 +184,14 @@ h1 {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
 
 .room-button:hover {
   background-color: #45a049;
 }
 
-/* Waiting room */
 .waiting-room {
   text-align: center;
   margin-top: 50px;
@@ -217,7 +211,6 @@ h1 {
   background-color: #1976d2;
 }
 
-/* Win screen */
 .win-screen {
   text-align: center;
   margin-top: 50px;
@@ -237,7 +230,6 @@ h1 {
   background-color: #e68900;
 }
 
-/* Game layout */
 .game-container {
   display: flex;
   flex-direction: row;
@@ -260,9 +252,9 @@ h1 {
 }
 
 .flag-image {
-  max-width: 100%; /* Ensure the flag fits within the container */
+  max-width: 100%;
   height: auto;
-  max-height: 300px; /* Limit the height to ensure buttons are visible */
+  max-height: 300px;
   margin-top: 20px;
   border: 2px solid #ddd;
   border-radius: 10px;
@@ -301,14 +293,13 @@ h1 {
   color: #333;
 }
 
-/* Media query for mobile devices */
 @media (max-width: 768px) {
   .players-list {
-    display: none; /* Hide the players list on mobile devices */
+    display: none; 
   }
 
   .flag-container {
-    width: 100%; /* Make the flag container take the full width */
+    width: 100%; 
   }
 }
 </style>

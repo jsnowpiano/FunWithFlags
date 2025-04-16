@@ -1,13 +1,12 @@
 const WebSocket = require('ws');
 const express = require('express');
 const cors = require('cors');
-const crypto = require('crypto'); // For generating unique room codes
+const crypto = require('crypto'); 
 
 const app = express();
-app.use(cors()); // Allow cross-origin requests
+app.use(cors()); 
 app.use(express.static('public'));
 
-// Full list of ISO 3166-1 alpha-2 country codes and names
 const countries = [
     { code: 'af', name: 'Afghanistan' },
     { code: 'al', name: 'Albania' },
@@ -208,7 +207,7 @@ const countries = [
     { code: 'zw', name: 'Zimbabwe' }
 ];
 
-// API endpoint to get the list of flags
+
 app.get('/api/flags', (req, res) => {
     const flags = countries.map(country => ({
         country: country.name,
@@ -217,18 +216,16 @@ app.get('/api/flags', (req, res) => {
     res.json(flags);
 });
 
-// Room management
-const rooms = {}; // Store rooms and their data
 
-// Create the WebSocket server
+const rooms = {};
+
+
 const server = app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
 
 const wss = new WebSocket.Server({ server });
 
-// Broadcast a message to all clients in a room
-// Broadcast a message to all clients in a room
 const broadcastToRoom = (roomCode, message) => {
     const room = rooms[roomCode];
     if (room) {
@@ -238,18 +235,14 @@ const broadcastToRoom = (roomCode, message) => {
             }
         });
     } else {
-        console.error(`Room with code ${roomCode} does not exist.`);
+        console.error(`Error joining room`);
     }
 };
-
-// Send a random flag to all clients in a room
 const sendRandomFlag = (roomCode) => {
     const room = rooms[roomCode];
     if (room) {
         const randomCountry = countries[Math.floor(Math.random() * countries.length)];
         const correctAnswer = randomCountry.name;
-
-        // Generate multiple-choice options
         const incorrectOptions = countries
             .filter(country => country.name !== correctAnswer)
             .sort(() => 0.5 - Math.random())
@@ -264,14 +257,13 @@ const sendRandomFlag = (roomCode) => {
             options
         };
 
-        room.answeredPlayers = []; // Reset answered players for the new flag
+        room.answeredPlayers = [];
         broadcastToRoom(roomCode, { type: 'newFlag', flag: room.currentFlag });
     } else {
         console.error(`Room with code ${roomCode} does not exist.`);
     }
 };
 
-// Handle WebSocket connections
 wss.on('connection', (ws) => {
     let currentRoom = null;
     let userId = null;
@@ -283,28 +275,27 @@ wss.on('connection', (ws) => {
             if (data.type === 'createRoom') {
                 const roomCode = crypto.randomBytes(4).toString('hex').slice(0, 7).toUpperCase();
                 rooms[roomCode] = {
-                    creator: data.username,
-                    clients: [{ ws, username: data.username, score: 0 }],
+                    creator: data.nickname,
+                    clients: [{ ws, nickname: data.nickname, score: 0 }],
                     gameStarted: false,
                     currentFlag: null,
                     answeredPlayers: []
                 };
                 currentRoom = roomCode;
-                userId = data.username;
+                userId = data.nickname;
             
-                // Send room creation confirmation to the creator
+
                 ws.send(JSON.stringify({ type: 'roomCreated', roomCode }));
             
-                // Broadcast the players list to the room (only the creator is in the room at this point)
-                broadcastToRoom(roomCode, { type: 'playersUpdate', players: rooms[roomCode].clients.map(c => ({ username: c.username, score: c.score })) });
+                broadcastToRoom(roomCode, { type: 'playersUpdate', players: rooms[roomCode].clients.map(c => ({ nickname: c.nickname, score: c.score })) });
             } else if (data.type === 'joinRoom') {
                 const room = rooms[data.roomCode];
                 if (room) {
-                    room.clients.push({ ws, username: data.username, score: 0 });
+                    room.clients.push({ ws, nickname: data.nickname, score: 0 });
                     currentRoom = data.roomCode;
-                    userId = data.username;
+                    userId = data.nickname;
                     ws.send(JSON.stringify({ type: 'roomJoined', roomCode: data.roomCode }));
-                    broadcastToRoom(data.roomCode, { type: 'playersUpdate', players: room.clients.map(c => ({ username: c.username, score: c.score })) });
+                    broadcastToRoom(data.roomCode, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
                 } else {
                     ws.send(JSON.stringify({ type: 'error', message: 'Room not found' }));
                 }
@@ -313,37 +304,35 @@ wss.on('connection', (ws) => {
                 if (room && room.creator === userId) {
                     room.gameStarted = true;
                     broadcastToRoom(currentRoom, { type: 'gameStarted' });
-                    sendRandomFlag(currentRoom); // Send the first flag
+                    sendRandomFlag(currentRoom); 
                 } else {
                     ws.send(JSON.stringify({ type: 'error', message: 'Only the room creator can start the game' }));
                 }
             } else if (data.type === 'answer') {
                 const room = rooms[currentRoom];
                 if (room && room.currentFlag) {
-                    const player = room.clients.find(c => c.username === userId);
+                    const player = room.clients.find(c => c.nickname === userId);
                     if (!room.answeredPlayers.includes(userId)) {
                         room.answeredPlayers.push(userId);
             
                         if (data.answer === room.currentFlag.country) {
                             if (room.answeredPlayers.length === 1) {
-                                player.score += 100; // First correct answer
+                                player.score += 100; 
                             } else {
-                                player.score += 50; // Subsequent correct answers
+                                player.score += 50; 
                             }
                         }
             
-                        broadcastToRoom(currentRoom, { type: 'playersUpdate', players: room.clients.map(c => ({ username: c.username, score: c.score })) });
+                        broadcastToRoom(currentRoom, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
             
-                        // Check if a player has reached 1000 points
                         if (player.score >= 1000) {
-                            console.log(`${player.username} has won the game with ${player.score} points.`);
-                            broadcastToRoom(currentRoom, { type: 'gameWon', winner: player.username });
-                            return; // Stop further processing
+                            console.log(`${player.nickname} has won the game with ${player.score} points.`);
+                            broadcastToRoom(currentRoom, { type: 'gameWon', winner: player.nickname });
+                            return;
                         }
             
-                        // Check if all players have answered
                         if (room.answeredPlayers.length === room.clients.length) {
-                            setTimeout(() => sendRandomFlag(currentRoom), 3000); // Move to the next flag after 3 seconds
+                            setTimeout(() => sendRandomFlag(currentRoom), 3000);
                         }
                     }
                 }
@@ -351,10 +340,10 @@ wss.on('connection', (ws) => {
                 const room = rooms[currentRoom];
                 if (room && room.creator === userId) {
                     room.clients.forEach(client => {
-                        client.score = 0; // Reset scores
+                        client.score = 0;
                     });
-                    broadcastToRoom(currentRoom, { type: 'gameReset', players: room.clients.map(c => ({ username: c.username, score: c.score })) });
-                    sendRandomFlag(currentRoom); // Start a new round
+                    broadcastToRoom(currentRoom, { type: 'gameReset', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
+                    sendRandomFlag(currentRoom); 
                 }
             }
         } catch (error) {
@@ -368,9 +357,9 @@ wss.on('connection', (ws) => {
             if (room) {
                 room.clients = room.clients.filter(client => client.ws !== ws);
                 if (room.clients.length === 0) {
-                    delete rooms[currentRoom]; // Remove empty room
+                    delete rooms[currentRoom];
                 } else {
-                    broadcastToRoom(currentRoom, { type: 'playersUpdate', players: room.clients.map(c => ({ username: c.username, score: c.score })) });
+                    broadcastToRoom(currentRoom, { type: 'playersUpdate', players: room.clients.map(c => ({ nickname: c.nickname, score: c.score })) });
                 }
             }
         }
