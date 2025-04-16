@@ -243,6 +243,8 @@ h1 {
   background-color: #f9f9f9;
   border-right: 1px solid #ddd;
   overflow-y: auto;
+  padding-right: 20px;
+  margin-right: 20px;
 }
 
 .flag-container {
