@@ -75,7 +75,7 @@ export default {
   },
   methods: {
     setupWebSocket() {
-      this.ws = new WebSocket('ws://localhost:3000');
+      this.ws = new WebSocket('wss://funwithflags.onrender.com');
       this.ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
