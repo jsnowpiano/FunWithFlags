@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <h1>Fun With Flags</h1>
-    <img v-if="!roomCode && !gameStarted" src="./assets/sheldon.png" alt="Sheldon" class="sheldon" />
+    <h1>Fun With Flags<div style="margin-top: 20px;"><img v-if="!roomCode && !gameStarted" src="./assets/sheldon.png" alt="Sheldon" class="sheldon" /></div></h1>
+    
     
 
     <div v-if="!roomCode && !gameStarted" class="room-form">
@@ -152,22 +152,20 @@ export default {
 <style>
 .sheldon {
   width: 200px;
-  margin-bottom: 100px;
 }
 #app {
   font-family: Arial, sans-serif;
   margin: 0;
-  padding: 0;
+  padding: 20px 0; /* Add padding to the top and bottom */
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: center; /* Keep content horizontally centered */
   min-height: 100vh;
   background-color: #f4f4f4;
 }
 
 h1 {
-  margin-bottom: 30px;
+  margin-bottom: 100px;
   color: #333;
 }
 
@@ -211,6 +209,7 @@ h1 {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin-top: 30px;
 }
 
 .start-button:hover {
@@ -250,7 +249,9 @@ h1 {
   border-right: 1px solid #ddd;
   overflow-y: auto;
   padding-right: 20px;
-  margin-right: 20px;
+  margin-right: 0px;
+  padding-left: 30px;
+  margin-top: 50px;
 }
 
 .flag-container {
